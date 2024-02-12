@@ -106,7 +106,7 @@ JanusGraph only uses default values for `index-name` and
 `health-request-timeout`. See [Configuration Reference](../configs/configuration-reference.md) for descriptions of
 these options and their accepted values.
 
--   `index.[X].elasticsearch.index-name`
+-   `index.[X].index-name`
 -   `index.[X].elasticsearch.health-request-timeout`
 
 ### REST Client Options
@@ -341,9 +341,6 @@ discussion](https://www.elastic.co/guide/en/elasticsearch/reference/current/tune
 on how to increase the refresh interval and its impact on write
 performance. Note, that a higher refresh interval means that it takes a
 longer time for graph mutations to be available in the index.
-
-For additional suggestions on how to increase write performance in
-Elasticsearch with detailed instructions, please read [this blog post](http://blog.bugsense.com/post/35580279634/indexing-bigdata-with-elasticsearch).
 
 ### Further Reading
 

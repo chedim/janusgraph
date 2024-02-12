@@ -21,6 +21,7 @@ on:
     - '.github/workflows/ci-docs.yml'
     - '.github/ISSUE_TEMPLATE/**'
     - 'requirements.txt'
+    - 'mkdocs.yml'
     - 'docs.Dockerfile'
     - '*.md'
   push:
@@ -29,6 +30,7 @@ on:
     - '.github/workflows/ci-docs.yml'
     - '.github/ISSUE_TEMPLATE/**'
     - 'requirements.txt'
+    - 'mkdocs.yml'
     - 'docs.Dockerfile'
     - '*.md'
     branches-ignore:
@@ -44,13 +46,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           java-version: 8
           distribution: zulu
@@ -104,13 +106,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java }}
           distribution: zulu

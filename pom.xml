@@ -58,27 +58,27 @@
         <titan.compatible-versions>1.0.0,1.1.0-SNAPSHOT</titan.compatible-versions>
         <tinkerpop.version>3.7.0</tinkerpop.version>
         <avro.version>1.11.3</avro.version>
-        <junit-platform.version>1.10.0</junit-platform.version>
-        <junit.version>5.10.0</junit.version>
+        <junit-platform.version>1.10.1</junit-platform.version>
+        <junit.version>5.10.1</junit.version>
         <mockito.version>4.11.0</mockito.version>
         <jamm.version>0.3.3</jamm.version>
-        <metrics.version>4.2.21</metrics.version>
+        <metrics.version>4.2.25</metrics.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <logback.version>1.2.11</logback.version>
+        <logback.version>1.2.13</logback.version>
         <httpcomponents.httpclient.version>4.5.14</httpcomponents.httpclient.version>
         <httpcomponents.httpcore.version>4.4.16</httpcomponents.httpcore.version>
-        <hadoop.version>3.3.5</hadoop.version>
-        <hbase2.version>2.5.3-hadoop3</hbase2.version>
-        <htrace.version>4.2.0-incubating</htrace.version>
+        <hadoop.version>3.3.6</hadoop.version>
+        <hbase2.version>2.5.6-hadoop3</hbase2.version>
+        <htrace.version>4.1.5</htrace.version>
         <bigtable.version>1.24.0</bigtable.version>
         <!-- align with org.apache.spark:spark-core_2.12 -->
-        <jackson2.version>2.15.3</jackson2.version>
+        <jackson2.version>2.16.1</jackson2.version>
         <lucene-solr.version>8.11.2</lucene-solr.version>
         <elasticsearch.version>8.10.4</elasticsearch.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.collections.version>3.2.2</commons.collections.version>
-        <zookeeper.version>3.8.1</zookeeper.version>
-        <netty4.version>4.1.100.Final</netty4.version>
+        <zookeeper.version>3.9.1</zookeeper.version>
+        <netty4.version>4.1.106.Final</netty4.version>
         <jna.version>5.13.0</jna.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -105,20 +105,21 @@
         <cassandra-driver.version>4.17.0</cassandra-driver.version>
         <scylla-driver.version>4.17.0.0</scylla-driver.version>
         <scylladb.version>5.1.4</scylladb.version>
-        <testcontainers.version>1.19.1</testcontainers.version>
+        <testcontainers.version>1.19.3</testcontainers.version>
         <easymock.version>5.2.0</easymock.version>
-        <protobuf.version>3.24.3</protobuf.version>
-        <grpc.version>1.59.0</grpc.version>
+        <protobuf.version>3.25.1</protobuf.version>
+        <grpc.version>1.61.0</grpc.version>
         <protoc.version>3.23.4</protoc.version>
         <gson.version>2.10.1</gson.version>
         <jcabi.version>2.1.0</jcabi.version>
         <jmh.version>1.33</jmh.version>
         <!-- align with org.apache.solr:solr-solrj -->
         <jetty.version>9.4.53.v20231009</jetty.version>
-        <log4j2.version>2.20.0</log4j2.version>
+        <log4j2.version>2.22.1</log4j2.version>
         <graalvm-nativeimage.version>23.1.1</graalvm-nativeimage.version>
         <caffeine.version>2.9.3</caffeine.version>
-        <checker-qual.version>3.39.0</checker-qual.version>
+        <checker-qual.version>3.40.0</checker-qual.version>
+        <curator.version>5.5.0</curator.version>
     </properties>
     <modules>
         <module>janusgraph-grpc</module>
@@ -166,7 +167,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>3.4.1</version>
                 <executions>
                     <execution>
                         <id>enforce-dependency-convergence</id>
@@ -290,7 +291,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.2.2</version>
+                <version>3.3.1</version>
                 <dependencies>
                     <dependency>
                         <groupId>com.puppycrawl.tools</groupId>
@@ -359,7 +360,7 @@
             <plugins>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.11.0</version>
+                    <version>3.12.1</version>
                     <configuration>
                         <source>${compiler.source}</source>
                         <target>${compiler.target}</target>
@@ -463,7 +464,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>3.2.1</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>
@@ -480,12 +481,12 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>3.4.0</version>
+                    <version>3.5.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.1.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -694,7 +695,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.12.0</version>
+                <version>3.14.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-configuration</groupId>
@@ -709,7 +710,7 @@
             <dependency>
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
-                <version>3.9.0</version>
+                <version>3.10.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-beanutils</groupId>
@@ -1002,7 +1003,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.11.0</version>
+                <version>2.15.1</version>
             </dependency>
             <dependency>
                 <groupId>org.jacoco</groupId>
@@ -1179,7 +1180,7 @@
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
-                <version>9.37</version>
+                <version>9.37.3</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -1291,6 +1292,18 @@
                         <groupId>ch.qos.reload4j</groupId>
                         <artifactId>reload4j</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-framework</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-recipes</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-client</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -1305,6 +1318,18 @@
                     <exclusion>
                         <groupId>ch.qos.reload4j</groupId>
                         <artifactId>reload4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-framework</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-recipes</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.curator</groupId>
+                        <artifactId>curator-client</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1375,12 +1400,28 @@
             <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-framework</artifactId>
-                <version>4.2.0</version>
+                <version>${curator.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.curator</groupId>
                 <artifactId>curator-recipes</artifactId>
-                <version>4.2.0</version>
+                <version>${curator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-client</artifactId>
+                <version>${curator.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-transport-native-epoll</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-native-epoll</artifactId>
+                <version>${netty4.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.woodstox</groupId>
@@ -1393,8 +1434,8 @@
                 <version>6.5.1</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.htrace</groupId>
-                <artifactId>htrace-core4</artifactId>
+                <groupId>org.apache.hbase.thirdparty</groupId>
+                <artifactId>hbase-noop-htrace</artifactId>
                 <version>${htrace.version}</version>
             </dependency>
             <dependency>

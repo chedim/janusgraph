@@ -21,6 +21,7 @@ on:
     - '.github/workflows/ci-docs.yml'
     - '.github/ISSUE_TEMPLATE/**'
     - 'requirements.txt'
+    - 'mkdocs.yml'
     - 'docs.Dockerfile'
     - '*.md'
   push:
@@ -29,6 +30,7 @@ on:
     - '.github/workflows/ci-docs.yml'
     - '.github/ISSUE_TEMPLATE/**'
     - 'requirements.txt'
+    - 'mkdocs.yml'
     - 'docs.Dockerfile'
     - '*.md'
     branches-ignore:
@@ -46,13 +48,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           java-version: "8.0.382+5"
           distribution: zulu
@@ -74,18 +76,18 @@ jobs:
             tag_suffix: "-java-11"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         if: "matrix.java == 8"
         with:
           java-version: "8.0.382+5"
           distribution: zulu
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         if: "matrix.java == 11"
         with:
           java-version: "11.0.20+1"
@@ -103,14 +105,14 @@ jobs:
           echo "JG_VER=${JG_VER}" >> $GITHUB_ENV
       - name: Run Trivy vulnerability scanner
         if: github.repository == 'janusgraph/janusgraph'
-        uses: aquasecurity/trivy-action@0.12.0
+        uses: aquasecurity/trivy-action@0.17.0
         with:
           image-ref: 'ghcr.io/janusgraph/janusgraph:${{ env.JG_VER }}${{ matrix.tag_suffix }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
       - name: Upload Trivy scan results to GitHub Security tab
         if: github.repository == 'janusgraph/janusgraph'
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
 
@@ -167,18 +169,18 @@ jobs:
             java: 11
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         if: "matrix.java == 8"
         with:
           java-version: "8.0.382+5"
           distribution: zulu
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         if: "matrix.java == 11"
         with:
           java-version: "11.0.20+1"
