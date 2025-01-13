@@ -21,6 +21,7 @@ import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.janusgraph.core.JanusGraphEdge;
+import org.janusgraph.core.JanusGraphRelation;
 import org.janusgraph.core.JanusGraphVertexProperty;
 import org.janusgraph.core.PropertyKey;
 import org.janusgraph.core.VertexLabel;
@@ -52,6 +53,16 @@ public class EmptyVertex implements InternalVertex {
 
     @Override
     public Iterable<InternalRelation> getAddedRelations(Predicate<InternalRelation> query) {
+        throw new UnsupportedOperationException(errorName + " do not support incident edges");
+    }
+
+    @Override
+    public Iterable<InternalRelation> findAddedProperty(Predicate<InternalRelation> query) {
+        throw new UnsupportedOperationException(errorName + " do not support incident edges");
+    }
+
+    @Override
+    public Iterable<InternalRelation> findPreviousRelation(long id) {
         throw new UnsupportedOperationException(errorName + " do not support incident edges");
     }
 
@@ -162,6 +173,11 @@ public class EmptyVertex implements InternalVertex {
     }
 
     @Override
+    public void remove(Iterable<JanusGraphRelation> loadedRelations) {
+        throw new UnsupportedOperationException(errorName + " cannot be removed");
+    }
+
+    @Override
     public <V> Iterator<VertexProperty<V>> properties(String... propertyKeys) {
         return Collections.emptyIterator();
     }
@@ -179,6 +195,11 @@ public class EmptyVertex implements InternalVertex {
     @Override
     public boolean isInvisible() {
         return false;
+    }
+
+    @Override
+    public Object getCompareId() {
+        return id();
     }
 
     @Override

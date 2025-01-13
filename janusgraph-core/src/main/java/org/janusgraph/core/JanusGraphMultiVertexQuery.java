@@ -60,7 +60,6 @@ public interface JanusGraphMultiVertexQuery<Q extends JanusGraphMultiVertexQuery
      */
     JanusGraphMultiVertexQuery addAllVertices(Collection<? extends Vertex> vertices);
 
-
     @Override
     Q adjacent(Vertex vertex);
 
@@ -152,5 +151,12 @@ public interface JanusGraphMultiVertexQuery<Q extends JanusGraphMultiVertexQuery
      * @return A list of all vertices' ids connected to each of the query's central vertex by matching edges
      */
     Map<JanusGraphVertex, VertexList> vertexIds();
+
+    /**
+     * Drops all vertices that match this query
+     *
+     * @return Map of vertices and their relations which were dropped
+     */
+    Map<JanusGraphVertex, Iterable<JanusGraphRelation>> drop();
 
 }

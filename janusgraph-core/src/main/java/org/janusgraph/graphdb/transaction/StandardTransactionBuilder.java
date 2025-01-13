@@ -28,6 +28,7 @@ import org.janusgraph.diskstorage.util.StandardBaseTransactionConfig;
 import org.janusgraph.diskstorage.util.time.TimestampProvider;
 import org.janusgraph.graphdb.configuration.GraphDatabaseConfiguration;
 import org.janusgraph.graphdb.database.StandardJanusGraph;
+import org.janusgraph.graphdb.tinkerpop.optimize.strategy.MultiQueryDropStepStrategyMode;
 import org.janusgraph.graphdb.tinkerpop.optimize.strategy.MultiQueryHasStepStrategyMode;
 import org.janusgraph.graphdb.tinkerpop.optimize.strategy.MultiQueryLabelStepStrategyMode;
 import org.janusgraph.graphdb.tinkerpop.optimize.strategy.MultiQueryPropertiesStrategyMode;
@@ -88,10 +89,12 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
 
     private boolean skipDBCacheRead;
 
-    private MultiQueryHasStepStrategyMode hasStepStrategyMode;
+    private boolean isLazyLoadRelations;
 
+    private MultiQueryHasStepStrategyMode hasStepStrategyMode;
     private MultiQueryPropertiesStrategyMode propertiesStrategyMode;
     private MultiQueryLabelStepStrategyMode labelStepStrategyMode;
+    private MultiQueryDropStepStrategyMode dropStepStrategyMode;
 
     private final boolean forceIndexUsage;
 
@@ -118,6 +121,7 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
         this.hasStepStrategyMode = graphConfig.hasStepStrategyMode();
         this.propertiesStrategyMode = graphConfig.propertiesStrategyMode();
         this.labelStepStrategyMode = graphConfig.labelStepStrategyMode();
+        this.dropStepStrategyMode = graphConfig.dropStepStrategyMode();
         this.writableCustomOptions = writableCustomOptions;
         if(customOptions == null){
             this.customOptions = new MergedConfiguration(writableCustomOptions, graphConfig.getConfiguration());
@@ -235,6 +239,12 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
     }
 
     @Override
+    public TransactionBuilder lazyLoadRelations() {
+        this.isLazyLoadRelations = true;
+        return this;
+    }
+
+    @Override
     public TransactionBuilder setHasStepStrategyMode(MultiQueryHasStepStrategyMode hasStepStrategyMode) {
         this.hasStepStrategyMode = hasStepStrategyMode;
         return this;
@@ -249,6 +259,12 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
     @Override
     public TransactionBuilder setLabelsStepStrategyMode(MultiQueryLabelStepStrategyMode labelStepStrategyMode) {
         this.labelStepStrategyMode = labelStepStrategyMode;
+        return this;
+    }
+
+    @Override
+    public TransactionBuilder setDropStepStrategyMode(MultiQueryDropStepStrategyMode dropStepStrategyMode) {
+        this.dropStepStrategyMode = dropStepStrategyMode;
         return this;
     }
 
@@ -298,8 +314,8 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
                 propertyPrefetching, multiQuery, singleThreaded, threadBound, getTimestampProvider(), userCommitTime,
                 indexCacheWeight, getVertexCacheSize(), getDirtyVertexSize(),
                 logIdentifier, restrictedPartitions, groupName,
-                defaultSchemaMaker, hasDisabledSchemaConstraints, skipDBCacheRead, hasStepStrategyMode, propertiesStrategyMode,
-                labelStepStrategyMode, customOptions);
+                defaultSchemaMaker, hasDisabledSchemaConstraints, skipDBCacheRead, isLazyLoadRelations, hasStepStrategyMode, propertiesStrategyMode,
+                labelStepStrategyMode, dropStepStrategyMode, customOptions);
         return graph.newTransaction(immutable);
     }
 
@@ -417,6 +433,11 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
     }
 
     @Override
+    public boolean isLazyLoadRelations() {
+        return isLazyLoadRelations;
+    }
+
+    @Override
     public MultiQueryHasStepStrategyMode getHasStepStrategyMode() {
         return hasStepStrategyMode;
     }
@@ -429,6 +450,11 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
     @Override
     public MultiQueryLabelStepStrategyMode getLabelStepStrategyMode() {
         return labelStepStrategyMode;
+    }
+
+    @Override
+    public MultiQueryDropStepStrategyMode getDropStepStrategyMode() {
+        return dropStepStrategyMode;
     }
 
     @Override
@@ -486,6 +512,8 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
         private final int dirtyVertexSize;
 
         private final boolean skipDBCacheRead;
+
+        private final boolean isLazyLoadRelations;
         private final String logIdentifier;
         private final int[] restrictedPartitions;
         private final DefaultSchemaMaker defaultSchemaMaker;
@@ -493,6 +521,7 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
         private MultiQueryHasStepStrategyMode hasStepStrategyMode;
         private MultiQueryPropertiesStrategyMode propertiesStrategyMode;
         private MultiQueryLabelStepStrategyMode labelStepStrategyMode;
+        private MultiQueryDropStepStrategyMode dropStepStrategyMode;
 
         private final BaseTransactionConfig handleConfig;
 
@@ -512,9 +541,11 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
                               DefaultSchemaMaker defaultSchemaMaker,
                               boolean hasDisabledSchemaConstraints,
                               boolean skipDBCacheRead,
+                              boolean isLazyLoadRelations,
                               MultiQueryHasStepStrategyMode hasStepStrategyMode,
                               MultiQueryPropertiesStrategyMode propertiesStrategyMode,
                               MultiQueryLabelStepStrategyMode labelStepStrategyMode,
+                              MultiQueryDropStepStrategyMode dropStepStrategyMode,
                               Configuration customOptions) {
             this.isReadOnly = isReadOnly;
             this.hasEnabledBatchLoading = hasEnabledBatchLoading;
@@ -537,9 +568,11 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
             this.defaultSchemaMaker = defaultSchemaMaker;
             this.hasDisabledSchemaConstraints = hasDisabledSchemaConstraints;
             this.skipDBCacheRead = skipDBCacheRead;
+            this.isLazyLoadRelations = isLazyLoadRelations;
             this.hasStepStrategyMode = hasStepStrategyMode;
             this.propertiesStrategyMode = propertiesStrategyMode;
             this.labelStepStrategyMode = labelStepStrategyMode;
+            this.dropStepStrategyMode = dropStepStrategyMode;
             this.handleConfig = new StandardBaseTransactionConfig.Builder()
                     .commitTime(commitTime)
                     .timestampProvider(times)
@@ -658,6 +691,11 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
         }
 
         @Override
+        public boolean isLazyLoadRelations() {
+            return isLazyLoadRelations;
+        }
+
+        @Override
         public MultiQueryHasStepStrategyMode getHasStepStrategyMode() {
             return hasStepStrategyMode;
         }
@@ -670,6 +708,11 @@ public class StandardTransactionBuilder implements TransactionConfiguration, Tra
         @Override
         public MultiQueryLabelStepStrategyMode getLabelStepStrategyMode() {
             return labelStepStrategyMode;
+        }
+
+        @Override
+        public MultiQueryDropStepStrategyMode getDropStepStrategyMode() {
+            return dropStepStrategyMode;
         }
 
         @Override

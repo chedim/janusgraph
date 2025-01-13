@@ -113,6 +113,7 @@ import org.janusgraph.util.system.TXUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -129,6 +130,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 
@@ -141,6 +143,8 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
     private static final Logger log =
             LoggerFactory.getLogger(StandardJanusGraph.class);
 
+    private static final Logger logForPrepareCommit =
+        LoggerFactory.getLogger(StandardJanusGraph.class.getName()+".prepareCommit");
 
     static {
         TraversalStrategies graphStrategies =
@@ -215,10 +219,10 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
             backend.getEdgeStoreCache(), backend.getIndexStoreCache(), idManager);
 
         this.serializer = config.getSerializer();
-        StoreFeatures storeFeatures = backend.getStoreFeatures();
-        this.indexSerializer = new IndexSerializer(configuration.getConfiguration(), this.serializer,
-                this.backend.getIndexInformation(), storeFeatures.isDistributed() && storeFeatures.isKeyOrdered());
         this.edgeSerializer = new EdgeSerializer(this.serializer);
+        StoreFeatures storeFeatures = backend.getStoreFeatures();
+        this.indexSerializer = new IndexSerializer(configuration.getConfiguration(), this.edgeSerializer, this.serializer,
+                this.backend.getIndexInformation(), storeFeatures.isDistributed() && storeFeatures.isKeyOrdered());
         this.vertexExistenceQuery = edgeSerializer.getQuery(BaseKey.VertexExists, Direction.OUT, new EdgeSerializer.TypedInterval[0]).setLimit(1);
         this.queryCache = new RelationQueryCache(this.edgeSerializer);
         this.schemaCache = configuration.getTypeCache(typeCacheRetrieval);
@@ -356,6 +360,9 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
             IOUtils.closeQuietly(backend);
             IOUtils.closeQuietly(queryCache);
             IOUtils.closeQuietly(serializer);
+            if(config instanceof Closeable){
+                IOUtils.closeQuietly((Closeable)config);
+            }
         } finally {
             isOpen = false;
         }
@@ -696,14 +703,48 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
         ListMultimap<InternalVertex, InternalRelation> mutatedProperties = ArrayListMultimap.create();
         List<IndexUpdate> indexUpdates = new ArrayList<>();
 
+        long startTimeStamp = System.currentTimeMillis();
+        int totalMutations = addedRelations.size() + deletedRelations.size();
+        boolean isBigDataSetLoggingEnabled = logForPrepareCommit.isDebugEnabled() && totalMutations >= backend.getBufferSize();
+        if (isBigDataSetLoggingEnabled) {
+            logForPrepareCommit.debug("0. Prepare commit for mutations count={}", totalMutations);
+        }
+
+        if (isBigDataSetLoggingEnabled) {
+            logForPrepareCommit.debug("1. Collect deleted edges and their index updates and acquire edge locks");
+        }
         prepareCommitDeletes(deletedRelations, filter, mutator, tx, acquireLocks, mutations, mutatedProperties, indexUpdates);
+
+        if (isBigDataSetLoggingEnabled) {
+            logForPrepareCommit.debug("2. Collect added edges and their index updates and acquire edge locks");
+        }
         prepareCommitAdditions(addedRelations, filter, mutator, tx, acquireLocks, mutations, mutatedProperties, indexUpdates);
-        prepareCommitVertexIndexUpdates(mutatedProperties, indexUpdates);
+
+        if (isBigDataSetLoggingEnabled) {
+            logForPrepareCommit.debug("3. Collect all index update for vertices");
+        }
+        prepareCommitVertexIndexUpdates(mutatedProperties, tx, indexUpdates);
+
+        if (isBigDataSetLoggingEnabled) {
+            logForPrepareCommit.debug("4. Acquire index locks (deletions first)");
+        }
         prepareCommitAcquireIndexLocks(indexUpdates, mutator, acquireLocks);
+
+        if (isBigDataSetLoggingEnabled) {
+            logForPrepareCommit.debug("5. Add relation mutations");
+        }
         prepareCommitAddRelationMutations(mutations, mutator, tx);
+
+        if (isBigDataSetLoggingEnabled) {
+            logForPrepareCommit.debug("6. Add index updates");
+        }
         boolean has2iMods = prepareCommitIndexUpdatesAndCheckIfAnyMixedIndexUsed(indexUpdates, mutator);
 
-        return new ModificationSummary(!mutations.isEmpty(),has2iMods);
+        if (isBigDataSetLoggingEnabled) {
+            long duration = System.currentTimeMillis() - startTimeStamp;
+            logForPrepareCommit.debug("7. Prepare commit is done with mutated vertex count={} in duration={}", mutations.size(), duration);
+        }
+        return new ModificationSummary(!mutations.isEmpty(), has2iMods);
     }
 
     /**
@@ -733,7 +774,7 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
                     mutator.acquireEdgeLock(idManager.getKey(vertex.id()), entry);
                 }
             }
-            indexUpdates.addAll(indexSerializer.getIndexUpdates(del));
+            indexUpdates.addAll(indexSerializer.getIndexUpdates(del, tx));
         }
     }
 
@@ -764,7 +805,7 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
                     mutator.acquireEdgeLock(idManager.getKey(vertex.id()), entry.getColumn());
                 }
             }
-            indexUpdates.addAll(indexSerializer.getIndexUpdates(add));
+            indexUpdates.addAll(indexSerializer.getIndexUpdates(add, tx));
         }
     }
 
@@ -772,10 +813,11 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
      * Collect all index update for vertices
      */
     private void prepareCommitVertexIndexUpdates(final ListMultimap<InternalVertex, InternalRelation> mutatedProperties,
-                                                 final List<IndexUpdate> indexUpdates){
-        for (InternalVertex v : mutatedProperties.keySet()) {
-            indexUpdates.addAll(indexSerializer.getIndexUpdates(v,mutatedProperties.get(v)));
-        }
+                                                 final StandardJanusGraphTx tx,
+                                                 final List<IndexUpdate> indexUpdates) {
+        indexUpdates.addAll(mutatedProperties.keySet().parallelStream()
+            .flatMap(v -> indexSerializer.getIndexUpdates(v, mutatedProperties.get(v), tx))
+            .collect(Collectors.toList()));
     }
 
     /**
@@ -792,7 +834,7 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
             }
         }
         for (IndexUpdate update : indexUpdates) {
-            if (!update.isCompositeIndex() || !update.isAddition()) continue;
+            if (!update.isCompositeIndex() || update.isDeletion()) continue;
             CompositeIndexType iIndex = (CompositeIndexType) update.getIndex();
             if (acquireLock(iIndex,acquireLocks)) {
                 mutator.acquireIndexLock((StaticBuffer)update.getKey(), ((Entry)update.getEntry()).getColumn());
@@ -851,10 +893,9 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
                                                                          final BackendTransaction mutator) throws BackendException {
         boolean has2iMods = false;
         for (IndexUpdate indexUpdate : indexUpdates) {
-            assert indexUpdate.isAddition() || indexUpdate.isDeletion();
             if (indexUpdate.isCompositeIndex()) {
                 final IndexUpdate<StaticBuffer,Entry> update = indexUpdate;
-                if (update.isAddition())
+                if (!indexUpdate.isDeletion())
                     mutator.mutateIndex(update.getKey(), Collections.singletonList(update.getEntry()), KCVSCache.NO_DELETIONS);
                 else
                     mutator.mutateIndex(update.getKey(), KeyColumnValueStore.NO_ADDITIONS, Collections.singletonList(update.getEntry()));
@@ -863,7 +904,7 @@ public class StandardJanusGraph extends JanusGraphBlueprintsGraph {
                 has2iMods = true;
                 IndexTransaction itx = mutator.getIndexTransaction(update.getIndex().getBackingIndexName());
                 String indexStore = ((MixedIndexType)update.getIndex()).getStoreName();
-                if (update.isAddition())
+                if (!indexUpdate.isDeletion())
                     itx.add(indexStore, update.getKey(), update.getEntry(), update.getElement().isNew());
                 else
                     itx.delete(indexStore,update.getKey(),update.getEntry().field,update.getEntry().value,update.getElement().isRemoved());

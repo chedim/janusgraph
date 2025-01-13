@@ -23,6 +23,7 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.janusgraph.core.JanusGraphEdge;
+import org.janusgraph.core.JanusGraphRelation;
 import org.janusgraph.core.JanusGraphVertexProperty;
 import org.janusgraph.diskstorage.EntryList;
 import org.janusgraph.diskstorage.keycolumnvalue.SliceQuery;
@@ -66,12 +67,18 @@ public class PreloadedVertex extends CacheVertex {
         super.addToQueryCache(query, entries);
     }
 
-    public EntryList getFromCache(final SliceQuery query) {
-        return queryCache.get(query);
+    @Override
+    public Iterable<InternalRelation> getAddedRelations(Predicate<InternalRelation> query) {
+        return Collections.EMPTY_LIST;
     }
 
     @Override
-    public Iterable<InternalRelation> getAddedRelations(Predicate<InternalRelation> query) {
+    public Iterable<InternalRelation> findAddedProperty(Predicate<InternalRelation> query) {
+        return Collections.EMPTY_LIST;
+    }
+
+    @Override
+    public Iterable<InternalRelation> findPreviousRelation(long id) {
         return Collections.EMPTY_LIST;
     }
 
@@ -139,6 +146,11 @@ public class PreloadedVertex extends CacheVertex {
 
     @Override
     public void remove() {
+
+    }
+
+    @Override
+    public void remove(Iterable<JanusGraphRelation> loadedRelations) {
 
     }
 
